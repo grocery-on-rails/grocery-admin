@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoR Admin: manage product</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+<body>
+
+  <style>
+    .mul-select{
+        width: 100%;
+    }
+  </style>
+
+  <script>
+    var jwt = localStorage.getItem("JWT");
+
+    if (jwt == ""){
+      window.location.replace("login.html");
+    }
+
+  </script>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">GoR Admin</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" aria-current="page" href="index.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="orders.html">Orders</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="categories.html">Categories</a>
+          </li>
+        </ul>
+        <form class="d-flex" method="GET" action="/index.html">
+          <input class="form-control me-2" type="search" placeholder="Search Products" aria-label="Search" name="search">
+          <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+      </div>
+      <a class="nav-link float-right link-light" id="logout" href="#" tabindex="-1" aria-disabled="true">Log out</a>
+    </div>
+  </nav>
+
+  <span id="message"></span>
+  
+  <div class="container mt-5 border rounded p-3">
+    <form id="form">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="mb-2">
+            <label class="form-label">Product ID</label>
+            <input type="text" class="form-control w-50" id="form-id" placeholder="ID" disabled>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Product Name</label>
+            <input type="text" class="form-control w-50" id="form-name" placeholder="Name">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Product Price (AED)</label>
+            <input type="text" class="form-control w-25" id="form-price" placeholder="Price">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Discount (AED)</label>
+            <input type="text" class="form-control w-25" id="form-discount" placeholder="discount">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Product Description</label>
+            <textarea type="text" class="form-control" id="form-description" rows=2></textarea>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Items in Stock</label>
+            <input type="text" class="form-control w-25" id="form-stock" placeholder="# of items">
+          </div>
+          <div class="mb-2">
+            <span id="form-categories"></span>
+          </div>
+        </div>
+        <div class="col-md-4 border rounded p-3">
+          <label class="form-label">Image</label>
+          <img src="" class="img-fluid" id="form-image">
+          <label class="form-label">Image Url</label>
+          <input type="text" class="form-control w-100" id="image-url" placeholder="Enter image URL">
+        </div>
+        <div class="container mt-3 ml-3">
+          <button type="submit" class="btn btn-primary w-25">Submit Changes</button>
+        </div>
+        <br>
+      </div>
+    </form>
+    <button id="delete" class="btn btn-danger w-25 mt-3">Delete Product</button>
+  </div>
+  
+  
+
+  <script src="js/logout.js"></script>
+  <script>
+    const proxy = "https://fast-sea-38093.herokuapp.com/"
+    const url = "https://grocery-on-rails.herokuapp.com";
+
+    var jwt = localStorage.getItem("JWT");
+
+    var image_list;
+    var cat_list;
+    var others;
+
+    function dropdownFluid(){
+      $(document).ready(function(){
+        $(".mul-select").select2({
+                placeholder: "select categroy", //placeholder
+                tags: true,
+                tokenSeparators: ['/',',',';'," "] 
+            });
+        })
+    }
+    
+    function getParameter( parameterName ){
+      var parameters = new URLSearchParams( window.location.search );
+      return parameters.get( parameterName ); // Returns null if the query string is empty or the parameter is not found.
+    }
+    
+    async function getProduct(id) {
+      const options = {
+        method: 'GET',
+      };
+      const response = await fetch(`${url}/product/${id}`, options);
+      const data = await response.json();
+      return data;
+    }
+
+    function showResult(response){
+      document.body.scrollTop = 0; // For Safari
+      document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+      var text;
+      const messageBox = document.getElementById("message"); 
+
+      if(response.msg == "Success"){
+        text = 
+        '<div class="alert alert-info" role="alert">\
+          This process has been successful!\
+            <a href="index.html" class="btn btn-primary float-end">Back to Home Page</button>\
+        </div>';
+      }else{
+        text = 
+        `<div class="alert alert-danger" role="alert">\
+          Error: ${response.msg}\
+        </div>`;
+      }
+      messageBox.innerHTML = text;
+    }
+
+    async function editProduct(data, id){
+      const options = {
+        method : 'POST',
+        headers : {
+          'Authorization': 'Bearer ' + jwt,
+          'Content-Type': 'application/json'
+        },
+        body : JSON.stringify(data)
+      }
+      console.log(`${url}/product/${id}`);
+      const response = await fetch(`${url}/product/${id}`, options);
+      const res = await response.json();
+      showResult(res);
+    }
+
+    async function addProduct(data){
+      const options = {
+        method : 'POST',
+        headers : {
+          'Authorization': 'Bearer ' + jwt,
+          'Content-Type': 'application/json'
+        },
+        body : JSON.stringify(data)
+      }
+      const response = await fetch(`${url}/home`, options);
+      const res = await response.json();
+      window.location.replace(`product.html?id=${res.id}`);
+    }
+
+    async function deleteProduct(id){
+      const data = {
+        "id":id,
+      }
+      const options = {
+        method : 'DELETE',
+        headers : {
+          'Authorization': 'Bearer ' + jwt,
+          'Content-Type': 'application/json'
+        },
+        body : JSON.stringify(data)
+      }
+      const response = await fetch(`${url}/home`, options);
+      const res = await response.json();
+      window.location.replace(`index.html`);
+    }
+
+    async function loadCategories(){
+      const options = {
+        method : 'GET',
+      }
+      const response = await fetch(`${url}/cat`, options);
+      const res = await response.json();
+      var list = [];
+      var main = [];
+      var sub = [];
+
+      for (var cat of res){
+        if (!(main.includes(cat.title))){
+          main.push(cat.title);
+        }
+
+        for (var subCat of cat.content){
+          if (!(sub.includes(subCat.title))){
+            sub.push(subCat.title);
+          }  
+        }
+      }
+      //console.log(list);
+      main.sort();
+      sub.sort();
+      list.push(main);
+      list.push(sub);
+      return list;
+    }
+
+    function printCategoryOptions(catOptions){
+      var text = `<label class="form-label">Main Categories</label>\
+                    <select name="main categories" id="form-cats-main" multiple="" class="mul-select">
+                    <option value="">main categories</option>`;
+      for (var cat of catOptions[0]){
+        text += `<option value="${cat}" id=${cat.replace(" ", "-")}>${cat}</option>`
+      }
+      text += '</select>';
+
+      text += `<label class="form-label">Sub Categories</label>\
+                <select name="sub categories" id="form-cats-sub" multiple="" class="mul-select">\
+                <option value="">sub categories</option>`;
+      for (var cat of catOptions[1]){
+        text += `<option value="${cat}" id=${cat.replace(" ", "-")}>${cat}</option>`
+      }
+      text += '</select>';
+
+      return text;
+    }
+
+    function selectCats(cats){
+      var e;
+      for (var cat of cats){
+        //console.log(cat);
+        e = document.getElementById(cat.replace(" ","-"));
+        if (e){
+          //console.log("true");
+          e.selected = true;
+        }
+      }
+    }
+
+    function countSelected(options){
+      var n = 0;
+      for (option of options){
+        if (option.selected){
+          n+=1;
+        }
+      }
+      return n;
+    }
+
+    function catList(name, main, sub){
+      var list = [];
+      for (var option of main) {
+        if ((option.selected) && (!list.includes(option))) {
+          list.push(option.value);
+        }
+        if (!list.includes(name) && list.length == 1){
+          list.push(name);
+        }
+      }
+      for (var option of sub) {
+        if ((option.selected) && (!list.includes(option))) {
+          list.push(option.value);
+        }
+      }
+      return list;
+    }
+
+    async function printProduct(id){
+      const data = await getProduct(id);
+      console.log(data);
+      document.getElementById("form-id").placeholder = id;
+      document.getElementById("form-name").value = data.name;
+      document.getElementById("form-price").value = data.price;
+      document.getElementById("form-description").value = data.description;
+      document.getElementById("form-stock").value = data.stock;
+      document.getElementById("form-discount").value = data.discount;
+      document.getElementById("form-image").src = data.image_list[0];
+      document.getElementById("image-url").value = data.image_list[0];
+
+      selectCats(data.subcategory);
+      dropdownFluid();
+      //console.log("here")
+
+      image_list = data.image_list;
+      cat_list = data.subcategory;
+      others = data.others;
+    }
+
+    function checkInput(){
+      if(document.getElementById("form-name").value ==""){
+        alert("Please enter a product name!");
+        return false;
+      }
+      if(document.getElementById("form-price").value == ""){
+        alert("Please enter a price!");
+        return false;
+      }
+      if(isNaN(parseFloat(document.getElementById("form-price").value))){
+        alert("Please enter a number for the price!");
+        return false;
+      }
+      if(document.getElementById("form-discount").value == ""){
+        alert("Please enter a discount value!");
+        return false;
+      }
+      if(isNaN(parseFloat(document.getElementById("form-discount").value))){
+        alert("Please enter a number for the discount value!");
+        return false;
+      }
+      if(document.getElementById("form-stock").value == ""){
+        alert("Please enter the number of items in stock!");
+        return false;
+      }
+      if(isNaN(parseFloat(document.getElementById("form-stock").value))){
+        alert("Please enter a number for the items-in-stock!");
+        return false;
+      }
+      if(document.getElementById("image-url").value == ""){
+        alert("Please enter an image url");
+        return false;
+      }
+      if(countSelected(document.getElementById('form-cats-main').options) == 0){
+        alert("Please enter at least one main category!");
+        return false;
+      }
+      if(countSelected(document.getElementById('form-cats-sub').options) == 0){
+        alert("Please enter at least one sub category!");
+        return false;
+      }
+      return true;
+    }
+
+    document.getElementById("form").addEventListener("submit", (e) =>{
+      e.preventDefault();
+      const messageBox = document.getElementById("message");
+      messageBox.innerHTML = "";
+      if(checkInput()){
+        if (confirm("Are you sure you want to submit these changes?")) {
+        const id = document.getElementById("form-id").placeholder;
+        var selected = catList(document.getElementById("form-name").value, document.getElementById('form-cats-main').options, document.getElementById('form-cats-sub').options);
+        image_list[0] = document.getElementById("image-url").value;
+        const body = {
+          "name" : document.getElementById("form-name").value,
+          "price" : parseFloat(document.getElementById("form-price").value),
+          "image_list" : image_list,
+          "description" : document.getElementById("form-description").value,
+          "others" : others,
+          "stock" : parseFloat(document.getElementById("form-stock").value),
+          "discount" : parseFloat(document.getElementById("form-discount").value),
+          "subcategory" : selected,
+        }
+
+        console.log(body);
+        if(id != "ID"){
+          editProduct(body, id);
+        }
+        else{
+          addProduct(body);
+        }
+      }
+    }
+    });
+
+    document.getElementById("delete").addEventListener("click", (e) =>{
+      if (confirm("Are you sure you want to DELETE this product?")) {
+        deleteProduct(id);
+      }
+    });
+
+    async function addCategories(){
+      var catOptions = await loadCategories();
+      document.getElementById("form-categories").innerHTML = printCategoryOptions(catOptions);
+      dropdownFluid();
+    }
+
+    async function prepareForm(id){
+      image_list = {};
+      cat_list = {};
+      others = {};
+      await addCategories();
+      printProduct(id);
+    }
+
+    const id = getParameter('id');
+    if (id){
+      prepareForm(id);
+    }
+    else{
+      image_list = [""];
+      cat_list = [];
+      others = {};
+      document.getElementById("delete").remove();
+      addCategories();
+    }
+    
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
+  <script src="js/bootstrap.js"></script>
+</body>
+</html>

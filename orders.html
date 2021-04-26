@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoR Admin: manage Orders</title>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+<body>
+
+    <script>
+        var jwt = localStorage.getItem("JWT");
+  
+        if (jwt == ""){
+          window.location.replace("login.html");
+        }
+  
+    </script>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="index.html">GoR Admin</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="index.html">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="orders.html">Orders</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="categories.html">Categories</a>
+              </li>
+            </ul>
+            <form class="d-flex" method="GET" action="/index.html">
+              <input class="form-control me-2" type="search" placeholder="Search Products" aria-label="Search" name="search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+          </div>
+          <a class="nav-link float-right link-light" href="#" id="logout" tabindex="-1" aria-disabled="true">Log out</a>
+        </div>
+      </nav>
+
+      <span id="message"></span>
+
+      <div class="container mt-5">
+        <div class="accordion" id="accordionOrders">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="pending">
+                    <button class="accordion-button collapsed btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePending" aria-expanded="false" aria-controls="collapsePending">
+                        Pending Orders
+                    </button>
+                </h2>
+                <div id="collapsePending" class="accordion-collapse collapse" aria-labelledby="pending" data-bs-parent="#accordionOrders">
+                    <div class="accordion-body">
+                        <table class="table table-hover" id="pending-table">
+                            <thead>
+                              <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Username</th>
+                                <th scope="col">Order Time</th>
+                                <th scope="col">Address</th>
+                                <th scope="col">Status</th>
+                                <th scope="col"></th>
+                              </tr>
+                            </thead>
+                            <tbody id = "pending-body">
+                            </tbody>
+                          </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="on-road">
+                    <button class="accordion-button collapsed btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOnRoad" aria-expanded="false" aria-controls="collapseOnRoad">
+                        On-road Orders
+                    </button>
+                </h2>
+                <div id="collapseOnRoad" class="accordion-collapse collapse" aria-labelledby="on-road" data-bs-parent="#accordionOrders">
+                    <div class="accordion-body">
+                        <table class="table table-hover" id="on-road-table">
+                            <thead>
+                              <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Username</th>
+                                <th scope="col">Order Time</th>
+                                <th scope="col">Address</th>
+                                <th scope="col">Status</th>
+                                <th scope="col"></th>
+                              </tr>
+                            </thead>
+                            <tbody id = "on-road-body">
+                            </tbody>
+                          </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="deliverd">
+                    <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDelivered" aria-expanded="false" aria-controls="collapseDelivered">
+                        Delivered Orders
+                    </button>
+                </h2>
+                <div id="collapseDelivered" class="accordion-collapse collapse" aria-labelledby="delivered" data-bs-parent="#accordionOrders">
+                    <div class="accordion-body">
+                        <table class="table table-hover" id="delivered-table">
+                            <thead>
+                              <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Username</th>
+                                <th scope="col">Order Time</th>
+                                <th scope="col">Address</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Delivery Time</th>
+                              </tr>
+                            </thead>
+                            <tbody id="delivered-body">
+                            </tbody>
+                          </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+      </div>
+    
+    <script src="js/logout.js"></script>
+    <script>
+        const proxy = "https://fast-sea-38093.herokuapp.com/"
+        const url = "https://grocery-on-rails.herokuapp.com";
+        var jwt = localStorage.getItem("JWT");
+
+        async function login(){
+            console.log("here");
+            const auth = {"email": "grocery-on-rails@gmail.com", "password": "grocery-on-rails"};
+            const options = {
+            method : 'POST',
+            headers : {
+                'Content-Type': 'application/json'
+            },
+            body : JSON.stringify(auth)
+            }
+            const response = await fetch(url + "/auth/login", options);
+            jwt = await response.json();
+            console.log(jwt);
+            localStorage.setItem("JWT", jwt.token);
+        }
+
+        async function loadOrders(){
+            const options = {
+                method : 'GET',
+                headers : {
+                    'Authorization': 'Bearer ' + jwt,
+                    'Content-Type': 'application/json'
+                }
+            }
+            const response = await fetch(`${url}/admin/orders`, options);
+            const res = await response.json();
+            return res;
+        }
+
+        async function submitToRoad(id){
+            const data = {
+                "order_id" : id,
+                "status" : "on-road",
+            }
+            const options = {
+                method : 'POST',
+                headers : {
+                    'Authorization': 'Bearer ' + jwt,
+                    'Content-Type': 'application/json'
+                },
+                body : JSON.stringify(data),
+            }
+            const response = await fetch(`${url}/admin/orders`, options);
+            const res = await response.json();
+            console.log(res);
+            location.reload();
+        }
+
+        async function submitToDelivered(id){
+            const data = {
+                "order_id" : id,
+                "status" : "delivered",
+                "delivery_time" : Date.now()/1000,
+            }
+            const options = {
+                method : 'POST',
+                headers : {
+                    'Authorization': 'Bearer ' + jwt,
+                    'Content-Type': 'application/json'
+                },
+                body : JSON.stringify(data),
+            }
+            const response = await fetch(`${url}/admin/orders`, options);
+            const res = await response.json();
+            console.log(res);
+            location.reload();
+        }
+
+        function getParameter( parameterName ){
+            var parameters = new URLSearchParams( window.location.search );
+            return parameters.get( parameterName ); // Returns null if the query string is empty or the parameter is not found.
+        }
+
+        function timeConverter(UNIX_timestamp){
+            var a = new Date(UNIX_timestamp * 1000);
+            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            var year = a.getFullYear();
+            var month = months[a.getMonth()];
+            var date = a.getDate();
+            var hour = a.getHours();
+            var min = a.getMinutes();
+            var sec = a.getSeconds();
+            var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+            return time;
+        }
+
+        function orderRow(order){
+            const date = timeConverter(order.order_time);
+            var buttonText = "";
+            if (order.status == "pending"){
+                buttonText = "move to on-road"
+            }
+            else if (order.status == "on-road"){
+                buttonText = "move to delivered"
+            }
+            var row =  `<tr>
+                            <th scope="row">${order.order_id}</th>\
+                            <td>${order.user.username}</td>
+                            <td>${date}</td>\
+                            <td>${order.address}</td>\
+                            <td>${order.status}</td>`;
+            if (order.status != "delivered"){
+                row += `<td><button class="btn btn-primary btn-sm ${order.status}-button" id="${order.order_id}" role="button">${buttonText}</a></td>\
+                        </tr>`;
+            }
+            else{
+                row += `<td>${timeConverter(order.delivery_time)}</td></tr>`;
+            }
+            return row;
+        }
+
+        function printOrders(ordersList){
+            for (status of Object.keys(ordersList)){
+                var text = "";
+                //console.log(ordersList[status]);
+                for (order of  ordersList[status]){
+                    text += orderRow(order);
+                }
+                var body = document.getElementById(`${status}-body`);
+                if (text != ""){
+                    body.innerHTML = text;
+                }
+            }
+            //document.getElementById("accordionCat").innerHTML = text;
+        }
+
+        function showResult(response){
+            document.body.scrollTop = 0; // For Safari
+            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+            var text;
+            const messageBox = document.getElementById("message"); 
+            if(response.msg == "Success"){
+                text = 
+                '<div class="alert alert-info" role="alert">\
+                This process has been successful!\
+                    <a href="index.html" class="btn btn-primary float-end">Back to Home Page</button>\
+                </div>';
+            }else{
+                text = 
+                `<div class="alert alert-danger" role="alert">\
+                Error: ${response.msg}\
+                </div>`;
+            }
+            messageBox.innerHTML = text;
+        }
+        
+        function processOrders(list){
+            var orders = {
+                "pending" : [],
+                "on-road" : [],
+                "delivered" : [],
+            };
+            for (user of list){
+                for (order of user.orders){
+                    order['user'] = user;
+                    orders[order.status].push(order);
+                }
+            }
+            return orders;
+        }
+
+        function moveToRoad(e){
+            if(confirm("Are you sure you want to move this order to On-Road?")){
+                submitToRoad(e.target.id);
+            }
+        }
+
+        function moveToDelivered(e){
+            if(confirm("Are you sure you want to move this order to Delivered?")){
+                submitToDelivered(e.target.id);
+            }
+        }
+
+        async function prepareOrders(){
+            var ordersList = await loadOrders();
+            console.log(ordersList);
+            var orders = processOrders(ordersList);
+            printOrders(orders);
+
+            var pendingButtons = document.getElementsByClassName("pending-button");
+            var onRoadButtons = document.getElementsByClassName("on-road-button");
+
+            for (var i = 0; i < pendingButtons.length; i++) {
+                pendingButtons[i].addEventListener('click', e => {moveToRoad(e);});
+            }
+
+            for (var i = 0; i < onRoadButtons.length; i++) {
+                onRoadButtons[i].addEventListener('click', e => {moveToDelivered(e);});
+            }
+            /*
+
+            
+            var deleteForms = document.getElementsByClassName("delete-form");
+            var form;
+
+            
+            for (var i = 0; i < deleteForms.length; i++) {
+            deleteForms[i].addEventListener('submit', e=>{deleteFunction(e);});
+            }*/
+        }
+
+        prepareOrders();
+      
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
+    <script src="js/bootstrap.js"></script>
+</body>
+</html>

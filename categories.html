@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoR Admin: manage Categories</title>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+<body>
+
+    <script>
+      var jwt = localStorage.getItem("JWT");
+
+      console.log(jwt);
+      if (jwt == ""){
+        window.location.replace("login.html");
+      }
+
+    </script>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="index.html">GoR Admin</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="index.html">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="orders.html">Orders</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="categories.html">Categories</a>
+              </li>
+            </ul>
+            <form class="d-flex" method="GET" action="/index.html">
+              <input class="form-control me-2" type="search" placeholder="Search Products" aria-label="Search" name="search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+          </div>
+          <a class="nav-link float-right link-light" id="logout" href="#" tabindex="-1" aria-disabled="true">Log out</a>
+        </div>
+      </nav>
+
+      <span id="message"></span>
+
+      <div class="container mt-5">
+        <div class="accordion" id="accordionCat">
+          
+        </div>
+      </div>
+    
+    <script src="js/logout.js"></script>
+    <script>
+      const proxy = "https://fast-sea-38093.herokuapp.com/"
+      const url = "https://grocery-on-rails.herokuapp.com";
+      var jwt = localStorage.getItem("JWT");
+
+      async function login(){
+        console.log("here");
+        const auth = {"email": "grocery-on-rails@gmail.com", "password": "grocery-on-rails"};
+        const options = {
+          method : 'POST',
+          headers : {
+            'Content-Type': 'application/json'
+          },
+          body : JSON.stringify(auth)
+        }
+        const response = await fetch(url + "/auth/login", options);
+        jwt = await response.json();
+        console.log(jwt);
+        localStorage.setItem("JWT", jwt.token);
+      }
+
+      async function loadCategories(){
+        const options = {
+          method : 'GET',
+        }
+        const response = await fetch(`${url}/cat`, options);
+        const res = await response.json();
+        return res;
+      }
+
+      function getParameter( parameterName ){
+        var parameters = new URLSearchParams( window.location.search );
+        return parameters.get( parameterName ); // Returns null if the query string is empty or the parameter is not found.
+      }
+
+      function subcatOptions(subcats){
+        var list = [];
+        for (subcat of subcats){
+          list.push(subcat.title);
+        }
+        list.sort();
+        //console.log(list)
+        text = "";
+        for (subcat of list){
+          text += `<option value="${subcat}">${subcat}</option>`;
+        }
+        return text;
+      }
+
+      function printAcc(catList){
+        text = "";
+        for (cat of catList){
+          //console.log(cat.content);
+          cat.content.sort();
+          text += `<div class="accordion-item">
+                    <h2 class="accordion-header" id="${cat.title}">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${cat.title}" aria-expanded="false" aria-controls="collapse${cat.title}">
+                        ${cat.title}
+                      </button>
+                    </h2>
+                    
+                    <div id="collapse${cat.title}" class="accordion-collapse collapse" aria-labelledby="${cat.title}" data-bs-parent="#accordionCat">
+                      <div class="accordion-body">
+                        <form id="${cat.title}-form-delete" class="delete-form">
+                          <div class="row g-3 align-items-center">
+                            <div class="col-auto">
+                              <label class="col-form-label">Select a subcategory to delete</label>
+                            </div>
+                            <div class="col-auto">
+                              <select name="select" class="form-select form-select-sm" aria-label=".form-select-sm example">
+                                <option selected>Select Category</option>
+                                ${subcatOptions(cat.content)}
+                              </select>
+                            </div>
+                            <div class="col-auto">
+                              <button type="submit" class="btn btn-danger btn-sm">Delete Subcategory</button>
+                            </div>
+                            <div class="col-auto">
+                              <input name="cat" value="${cat.title}" style="visibility:hidden;">
+                            </div>
+                          </div>
+                        </form>
+
+                        <form id="${cat.title}-form-add" class="add-form">
+                          <div class="row g-3 align-items-center mt-2">
+                            <div class="col-auto">
+                              <label class="col-form-label">Add a new subcategory</label>
+                            </div>
+                            <div class="col-auto">
+                              <input class="form-control form-control-sm" name="newCat" type="text" placeholder="Add Subcategory">
+                            </div>
+                            <div class="col-auto">
+                              <button type="submit" class="btn btn-primary btn-sm">Add Subcategory</button>
+                            </div>
+                            <div class="col-auto">
+                              <input name="cat" value="${cat.title}" style="visibility:hidden;">
+                            </div>
+                            
+                          </div>
+                        </form>
+
+                      </div>
+                    </div>
+                  </div>`;
+        }
+        document.getElementById("accordionCat").innerHTML = text;
+      }
+
+      function showResult(response){
+      document.body.scrollTop = 0; // For Safari
+      document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+      var text;
+      const messageBox = document.getElementById("message"); 
+      if(response.msg == "Success"){
+        text = 
+        '<div class="alert alert-info" role="alert">\
+          This process has been successful!\
+            <a href="index.html" class="btn btn-primary float-end">Back to Home Page</button>\
+        </div>';
+      }else{
+        text = 
+        `<div class="alert alert-danger" role="alert">\
+          Error: ${response.msg}\
+        </div>`;
+      }
+      messageBox.innerHTML = text;
+    }
+
+      async function deleteSubcat(cat, subcat){
+        const data = {
+          "name" : subcat,
+        }
+        const options = {
+          method : 'DELETE',
+          headers : {
+            'Authorization': 'Bearer ' + jwt,
+            'Content-Type': 'application/json'
+          },
+          body : JSON.stringify(data)
+        }
+        const response = await fetch(`${url}/cat/${cat}`, options);
+        const res = await response.json();
+        showResult(res);
+      }
+
+      async function submitSubcat(cat, subcat){
+        const list = [];
+        list.push(subcat);
+        const data = {
+          "subcategory" : list,
+        }
+        const options = {
+          method : 'POST',
+          headers : {
+            'Authorization': 'Bearer ' + jwt,
+            'Content-Type': 'application/json'
+          },
+          body : JSON.stringify(data)
+        }
+        const response = await fetch(`${url}/cat/${cat}`, options);
+        const res = await response.json();
+        showResult(res);
+      }
+
+      function deleteFunction(e){
+        e.preventDefault();
+        const messageBox = document.getElementById("message");
+        messageBox.innerHTML = "";
+        const form = e.target;
+        var data = new FormData(form);
+        const subcatName = data.get("select");
+        const catName = data.get("cat");
+        if (subcatName != "Select Category"){
+          if (confirm("Are you sure you want to submit these changes?")){
+            deleteSubcat(catName, subcatName);
+          }
+        }
+        else{
+          alert("Please enter a category name!!")
+        }
+      }
+
+      function addFunction(e){
+        e.preventDefault();
+        const messageBox = document.getElementById("message");
+        messageBox.innerHTML = "";
+        const form = e.target;
+        var data = new FormData(form);
+        const subcatName = data.get("newCat");
+        const catName = data.get("cat");
+        if (subcatName != ""){
+          submitSubcat(catName, subcatName);
+        }
+        else{
+          alert("Please enter a category name!!")
+        }
+      }
+
+      async function prepareAcc(){
+        var catList = await loadCategories();
+        printAcc(catList);
+
+        var addForms = document.getElementsByClassName("add-form");
+        var deleteForms = document.getElementsByClassName("delete-form");
+        var form;
+
+        for (var i = 0; i < addForms.length; i++) {
+          addForms[i].addEventListener('submit', e => {addFunction(e);});
+        }
+        for (var i = 0; i < deleteForms.length; i++) {
+          deleteForms[i].addEventListener('submit', e=>{deleteFunction(e);});
+        }
+      }
+
+      prepareAcc();
+      
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
+    <script src="js/bootstrap.js"></script>
+</body>
+</html>

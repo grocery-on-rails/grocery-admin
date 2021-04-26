@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoR Admin</title>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+<body>
+
+    <script>
+      var jwt = localStorage.getItem("JWT");
+
+      if (jwt == ""){
+        window.location.replace("login.html");
+      }
+
+    </script>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="index.html">GoR Admin</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="index.html">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="orders.html">Orders</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="categories.html">Categories</a>
+              </li>
+            </ul>
+            <form class="d-flex" method="GET" action="/index.html">
+              <input class="form-control me-2" type="search" placeholder="Search Products" aria-label="Search" name="search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+          </div>
+          <a class="nav-link float-right link-light" id="logout" href="#" tabindex="-1" aria-disabled="true">Log out</a>
+        </div>
+      </nav>
+      
+      <div class="container mt-5">
+        <div class="row">
+          <div class="col-12">
+            <div class="card w-100" id = "search-card" style="width: 18rem;">
+              <div class="card-body"> 
+                <h3 class="card-title" id = "search-title">Welcome to GoR Admin!</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row my-3" id="addProductCard">
+          <div class="col-12">
+            <div class="card w-100" id = "add-card" style="width: 18rem;">
+              <div class="card-body"> 
+                <h3 class="card-title" id = "search-title">Click here to add a product!  <a href="product.html" class="btn btn-primary btn-sm">Add Product!</a></h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" id="search-row">
+          <div class="col-12">
+            <table class="table table-hover" id="search-table" style = "visibility: hidden;">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">image</th>
+                  <th scope="col">Product Name</th>
+                  <th scope="col"># in stock</th>
+                  <th scope="col">Price</th>
+                  <th scope="col">discount</th>
+                  <th scope="col"></th>
+                </tr>
+              </thead>
+              <tbody id = "search-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="container mt-1">
+        <div class="row">
+          <div class="col-12">
+            <div class="card w-100 text-white bg-danger" id="stock-card" style="width: 18rem;">
+              <div class="card-body"> 
+                <h3 class="card-title">Out-of-Stock Items</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-12">
+            <table class="table table-hover" id="stock-table">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">image</th>
+                  <th scope="col">Product Name</th>
+                  <th scope="col"># in stock</th>
+                  <th scope="col">Price</th>
+                  <th scope="col">discount</th>
+                  <th scope="col"></th>
+                </tr>
+              </thead>
+              <tbody id = "stock-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    <script src="js/logout.js"></script>
+    <script>
+      const proxy = "https://fast-sea-38093.herokuapp.com/"
+      const url = "https://grocery-on-rails.herokuapp.com";
+
+      async function login(){
+        console.log("here");
+        const auth = {"email": "grocery-on-rails@gmail.com", "password": "grocery-on-rails"};
+        const options = {
+          method : 'POST',
+          headers : {
+            'Content-Type': 'application/json'
+          },
+          body : JSON.stringify(auth)
+        }
+        const response = await fetch(url + "/auth/login", options);
+        jwt = await response.json();
+        console.log(jwt);
+        localStorage.setItem("JWT", jwt.token);
+      }
+
+
+      async function productSearch(value) {
+        const options = {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + jwt
+          }
+        };
+        const response = await fetch(`${url}/search/${value}`, options);
+        const data = await response.json();
+        return data;
+      }
+
+      async function getEmpty(){
+        const options = {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + jwt
+          }
+        };
+        const response = await fetch(url + "/admin/empty", options);
+        const data = await response.json();
+        return data;
+      }
+
+      function getParameter( parameterName ){
+        var parameters = new URLSearchParams( window.location.search );
+        return parameters.get( parameterName ); // Returns null if the query string is empty or the parameter is not found.
+      }
+
+      function productRow(i, product){
+        if (product.stock == 0){
+          row = '<tr class="table-danger">';
+        }else if (product.stock < 10){
+          row = '<tr class="table-warning">';
+        }else{
+          row = '<tr class="table-success">';
+        }
+        return row + `<th scope="row">${i}</th>\
+                <td><img src="${product.image}" height="50"></td>
+                <td>${product.name}</td>\
+                <td>${product.stock}</td>\
+                <td>AED${product.price}</td>\
+                <td>AED${product.discount}</td>\
+                <td><a class="btn btn-primary" href="product.html?id=${product._id.$oid}" role="button">Edit</a></td>\
+              </tr>`;
+      }
+
+      function buildTable(data){
+        let body = "";
+        let i = 1;
+        for (let product of data){
+          body += productRow(i, product);
+          i++;
+        }
+        return body;
+      }
+
+      function printSearch(value, data)
+      {
+        const title = `There are ${data.length} Search results for "${value}":`;
+        document.getElementById("search-title").innerHTML = title;
+        //document.getElementById("search-card").style.visibility = "visible";
+
+        body = buildTable(data);
+
+        document.getElementById("search-body").innerHTML = body;
+        document.getElementById("search-table").style.visibility = "visible";
+      }
+
+      async function printEmpty(){
+        const data = await getEmpty();
+        body = buildTable(data);
+        const e = document.getElementById("stock-body");
+        if(e){
+          e.innerHTML = body;
+        }
+      }
+      
+
+      async function checkSearch(){
+        let value = getParameter("search");
+        if (value){
+          document.getElementById("stock-table").remove();
+          document.getElementById("stock-card").remove();
+          document.getElementById("addProductCard").remove()
+          const data = await productSearch(value);
+          printSearch(value, data);
+        }
+        else{
+          document.getElementById("search-row").remove();
+        }
+      }
+
+      checkSearch();
+      printEmpty();
+      
+      
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
+    <script src="js/bootstrap.js"></script>
+</body>
+</html>

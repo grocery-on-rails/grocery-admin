@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoR Admin</title>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">GoR Admin</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+        </div>
+    </nav>
+
+    <span id="message"></span>
+
+    <div class="container-sm w-25 p-3 mt-5 border rounded-3">
+        <h3>Please Login to continue!</h3>
+        <form id="login">
+            <div class="mb-3">
+              <label for="exampleInputEmail1" class="form-label">Email address</label>
+              <input type="email" name="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+            </div>
+            <div class="mb-3">
+              <label for="exampleInputPassword1" class="form-label">Password</label>
+              <input type="password" name="pass" class="form-control" id="exampleInputPassword1">
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+    </div>
+
+    <script>
+        const proxy = "https://fast-sea-38093.herokuapp.com/"
+        const url = "https://grocery-on-rails.herokuapp.com";
+
+        async function login(email, pass){
+            const auth = {"email": email, "password": pass};
+            const options = {
+            method : 'POST',
+                headers : {
+                    'Content-Type': 'application/json'
+                },
+                body : JSON.stringify(auth)
+            }
+            const response = await fetch(url + "/auth/login", options);
+            var jwt = await response.json();
+            console.log(jwt)
+            return jwt;
+        }
+
+        async function loginFunction(e){
+            e.preventDefault();
+            const form = e.target;
+            var data = new FormData(form);
+            var email = data.get("email");
+            var pass = data.get("pass");
+            var jwt = await login(email, pass);
+            console.log(jwt.token)
+            if(jwt.token != undefined){
+                localStorage.setItem("JWT", jwt.token);
+                window.location.replace("index.html");
+            }
+            else{
+                document.body.scrollTop = 0; // For Safari
+                document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+                var text;
+                const messageBox = document.getElementById("message");
+                messageBox.innerHTML = `<div class="alert alert-danger" role="alert">\
+                                        Error: ${jwt.error}\
+                                        </div>`;
+            }
+        }
+
+        document.getElementById("login").addEventListener("submit", (e)=>{loginFunction(e)});
+    </script>
+</body>
+</html>
