@@ -6,7 +6,7 @@
     <title>Multilpe Select</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>  
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
@@ -14,32 +14,33 @@
 </head>
 <body>
 
-    <style>
-        .mul-select{
-            width: 100%;
-        }
-    </style>
-    
-                    <select class="mul-select" multiple="true">
-                        <option value="Cambodia">Cambodia</option>
-                        <option value="Khmer">Khmer</option>
-                        <option value="Thiland">Thiland</option>
-                        <option value="Koren">Koren</option>
-                        <option value="China">China</option>
-                        <option value="English">English</option>
-                        <option value="USA">USA</option>
-                    </select>
+    <div class="container">
+        <table class="table table-condensed"  id="myTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Credit</th>
+                <th>Debit</th>
+                <th>Balance</th>
+            </tr>
+        </thead>
+        <tbody class="panel">
+            <tr data-toggle="collapse" data-target="#demo1" data-parent="#myTable">
+                <td>1</td>
+                <td>05 May 2013</td>
+                <td>Credit Account</td>
+                <td class="text-success">$150.00</td>
+                <td class="text-error"></td>
+                <td class="text-success">$150.00</td>
+            </tr>
+            <tr id="demo1" class="collapse">
+                <td colspan="6" class="hiddenRow"><div>Demo1</div> </td>
+            
+        </tbody>
+    </table>
     </div>
-     
-    <script>
-        $(document).ready(function(){
-            $(".mul-select").select2({
-                    placeholder: "select country", //placeholder
-                    tags: true,
-                    tokenSeparators: ['/',',',';'," "] 
-                });
-            })
-    </script>
 </body>
 </html>
 
