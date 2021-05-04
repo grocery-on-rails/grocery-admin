@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoR Admin</title>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+<body>
+
+    <script>
+      var jwt = localStorage.getItem("JWT");
+
+      if (jwt == ""){
+        window.location.replace("login.html");
+      }
+
+    </script>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="index.html">GoR Admin</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="index.html">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="discounts.html">Discounts</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="orders.html">Orders and Statistics</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="categories.html">Categories</a>
+              </li>
+            </ul>
+            <form class="d-flex" method="GET" action="/index.html">
+              <input class="form-control me-2" type="search" placeholder="Search Products" aria-label="Search" name="search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+          </div>
+          <a class="nav-link float-right link-light" id="logout" href="#" tabindex="-1" aria-disabled="true">Log out</a>
+        </div>
+      </nav>
+      <div class="container mt-5">
+        <div class="row" id="discount-row">
+          <div class="col-12">
+            <table class="table table-hover" id="discount-table">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">image</th>
+                  <th scope="col">Product Name</th>
+                  <th scope="col"># in stock</th>
+                  <th scope="col">Price</th>
+                  <th scope="col">discount</th>
+                  <th scope="col"></th>
+                </tr>
+              </thead>
+              <tbody id = "discount-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+    </div>
+
+    <script src="js/logout.js"></script>
+    <script>
+      const proxy = "https://fast-sea-38093.herokuapp.com/";
+      const url = "https://grocery-on-rails.herokuapp.com";
+
+      async function getDiscount(){
+        const options = {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + jwt
+          }
+        };
+        const response = await fetch(url + "/home", options);
+        const data = await response.json();
+        return data.content[0].content;
+      }
+        
+      function productRow(i, product){
+        if (product.stock == 0){
+          row = '<tr class="table-danger">';
+        }else if (product.stock < 10){
+          row = '<tr class="table-warning">';
+        }else{
+          row = '<tr class="table-success">';
+        }
+        return row + `<th scope="row">${i}</th>\
+                <td><img src="${product.image}" height="50"></td>
+                <td>${product.name}</td>\
+                <td>${product.stock}</td>\
+                <td>AED${product.price}</td>\
+                <td>AED${product.discount}</td>\
+                <td><a class="btn btn-primary" href="product.html?id=${product._id.$oid}" role="button">Edit</a></td>\
+              </tr>`;
+      }
+
+      function buildTable(data){
+        let body = "";
+        let i = 1;
+        for (let product of data){
+          body += productRow(i, product);
+          i++;
+        }
+        return body;
+      }
+
+      function printDiscount(data)
+      {
+
+        body = buildTable(data);
+
+        document.getElementById("discount-body").innerHTML = body;
+      }
+
+      async function prepare(){
+          const data = await getDiscount();
+          printDiscount(data);
+      }
+
+      
+      prepare();
+      
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
+    <script src="js/bootstrap.js"></script>
+</body>
+</html>

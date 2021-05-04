@@ -31,7 +31,10 @@
                 <a class="nav-link active" aria-current="page" href="index.html">Home</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="orders.html">Orders</a>
+                <a class="nav-link" href="discounts.html">Discounts</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="orders.html">Orders and Statistics</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="categories.html">Categories</a>
@@ -49,20 +52,15 @@
       <div class="container mt-5">
         <div class="row">
           <div class="col-12">
-            <div class="card w-100" id = "search-card" style="width: 18rem;">
-              <div class="card-body"> 
-                <h3 class="card-title" id = "search-title">Welcome to GoR Admin!</h3>
-              </div>
-            </div>
+                <h3 class="" id = "search-title">Welcome to GoR Admin!</h3>
           </div>
         </div>
 
         <div class="row my-3" id="addProductCard">
           <div class="col-12">
-            <div class="card w-100" id = "add-card" style="width: 18rem;">
-              <div class="card-body"> 
-                <h3 class="card-title" id = "search-title">Click here to add a product!  <a href="product.html" class="btn btn-primary btn-sm">Add Product!</a></h3>
-              </div>
+            <div class="card w-100 p-2 pt-3" id = "add-card" style="width: 18rem;">
+              <h4 class="card-title" id = "search-title">Click here to add a product!  <a href="product.html" class="btn btn-primary btn-sm">Add Product!</a></h4>
+              
             </div>
           </div>
         </div>
@@ -125,29 +123,17 @@
       const proxy = "https://fast-sea-38093.herokuapp.com/"
       const url = "https://grocery-on-rails.herokuapp.com";
 
-      async function login(){
-        console.log("here");
-        const auth = {"email": "grocery-on-rails@gmail.com", "password": "grocery-on-rails"};
+      async function productSearch(value) {
+        const search_body = {
+          "sort" : "relevance",
+        }
         const options = {
-          method : 'POST',
-          headers : {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + jwt,
             'Content-Type': 'application/json'
           },
-          body : JSON.stringify(auth)
-        }
-        const response = await fetch(url + "/auth/login", options);
-        jwt = await response.json();
-        console.log(jwt);
-        localStorage.setItem("JWT", jwt.token);
-      }
-
-
-      async function productSearch(value) {
-        const options = {
-          method: 'GET',
-          headers: {
-            'Authorization': 'Bearer ' + jwt
-          }
+          body: JSON.stringify(search_body)
         };
         const response = await fetch(`${url}/search/${value}`, options);
         const data = await response.json();
@@ -174,7 +160,7 @@
       function productRow(i, product){
         if (product.stock == 0){
           row = '<tr class="table-danger">';
-        }else if (product.stock < 10){
+        }else if (product.stock <= 5){
           row = '<tr class="table-warning">';
         }else{
           row = '<tr class="table-success">';

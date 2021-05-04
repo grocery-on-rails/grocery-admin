@@ -40,7 +40,10 @@
             <a class="nav-link" aria-current="page" href="index.html">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="orders.html">Orders</a>
+            <a class="nav-link" href="discounts.html">Discounts</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="orders.html">Orders and Statistics</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="categories.html">Categories</a>
@@ -66,15 +69,15 @@
             <input type="text" class="form-control w-50" id="form-id" placeholder="ID" disabled>
           </div>
           <div class="mb-2">
-            <label class="form-label">Product Name</label>
+            <label class="form-label">Product Name*</label>
             <input type="text" class="form-control w-50" id="form-name" placeholder="Name">
           </div>
           <div class="mb-2">
-            <label class="form-label">Product Price (AED)</label>
+            <label class="form-label">Product Price (AED)*</label>
             <input type="text" class="form-control w-25" id="form-price" placeholder="Price">
           </div>
           <div class="mb-2">
-            <label class="form-label">Discount (AED)</label>
+            <label class="form-label">Discount (AED)*</label>
             <input type="text" class="form-control w-25" id="form-discount" placeholder="discount">
           </div>
           <div class="mb-2">
@@ -82,8 +85,24 @@
             <textarea type="text" class="form-control" id="form-description" rows=2></textarea>
           </div>
           <div class="mb-2">
-            <label class="form-label">Items in Stock</label>
+            <label class="form-label">Expiry date*</label>
+            <input type="date" class="form-control w-25" id="form-date" placeholder="# of items">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Items in Stock*</label>
             <input type="text" class="form-control w-25" id="form-stock" placeholder="# of items">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Unit</label>
+            <input type="text" class="form-control w-25" id="form-unit" placeholder="(e.g. can, bag, ...)">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Quantity</label>
+            <input type="text" class="form-control w-25" id="form-quantity" placeholder="(e.g. 250g, 1L, ...)">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Country</label>
+            <input type="text" class="form-control w-25" id="form-country" placeholder="Country of origin">
           </div>
           <div class="mb-2">
             <span id="form-categories"></span>
@@ -308,6 +327,13 @@
       document.getElementById("form-discount").value = data.discount;
       document.getElementById("form-image").src = data.image_list[0];
       document.getElementById("image-url").value = data.image_list[0];
+      document.getElementById("form-unit").value = data.others.unit;
+      document.getElementById("form-quantity").value = data.others.quantity;
+      document.getElementById("form-country").value = data.others.country;
+      const rand1 = (data.name.length)%3+6;
+      const rand2 = (data.name.length)%20+10;
+      document.getElementById("form-date").value = `2021-0${rand1}-${rand2}`;
+      
 
       selectCats(data.subcategory);
       dropdownFluid();
@@ -371,6 +397,11 @@
         const id = document.getElementById("form-id").placeholder;
         var selected = catList(document.getElementById("form-name").value, document.getElementById('form-cats-main').options, document.getElementById('form-cats-sub').options);
         image_list[0] = document.getElementById("image-url").value;
+        others = {
+          "unit": document.getElementById("form-unit").value,
+          "quantity": document.getElementById("form-quantity").value,
+          "country": document.getElementById("form-country").value,
+        }
         const body = {
           "name" : document.getElementById("form-name").value,
           "price" : parseFloat(document.getElementById("form-price").value),

@@ -21,7 +21,7 @@
 
     <span id="message"></span>
 
-    <div class="container-sm w-25 p-3 mt-5 border rounded-3">
+    <div class="container-sm p-3 mt-5 border rounded-3" style = "width:25rem;">
         <h3>Please Login to continue!</h3>
         <form id="login">
             <div class="mb-3">
@@ -57,6 +57,8 @@
 
         async function loginFunction(e){
             e.preventDefault();
+            const messageBox = document.getElementById("message");
+            messageBox.innerHTML = "";
             const form = e.target;
             var data = new FormData(form);
             var email = data.get("email");
